@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: air-quality-api
+    env: node
+    buildCommand: npm install
+    startCommand: node prediction-api.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: CORS_ORIGIN
+        value: https://your-frontend-url.onrender.com
+
