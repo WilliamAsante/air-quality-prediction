@@ -165,7 +165,7 @@ def run_prediction():
         # Add minimal variation to the 24h lag to keep predictions close to baseline
         hour = datetime.now().hour
         time_factor = 1.0 + 0.02 * np.sin(hour * np.pi / 12)  # Much smaller daily cycle
-        random_factor = 1.0 + random.uniform(-0.02, 0.02)  # Much smaller random variation
+        random_factor = 1.0 + random.uniform(-0.02, 0.03)  # Much smaller random variation
         
         lag_24h = latest_pm25 * 0.95 * time_factor * random_factor  # Closer to input value
         
