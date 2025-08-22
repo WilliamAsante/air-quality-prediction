@@ -189,28 +189,25 @@ def run_prediction():
             next_pm25 = np.mean(tree_predictions)
             confidence = 1 - (np.std(tree_predictions) / (next_pm25 + 1e-8))  # Avoid division by zero
             
-            # Add much larger variations to create significant differences
-            # Time-based variation with much larger amplitude
-            time_variation = 1.0 + 0.08 * np.sin(step * np.pi / 2.5)  # 8% hourly variation
-            
-            # Environmental noise with much larger range
-            environmental_noise = random.uniform(0.85, 1.15)  # 15% environmental factors
+            # Force significant variations by overriding the ML prediction with step-based calculations
+            # Start with the input value and apply step-specific variations
+            base_pm25 = latest_pm25
             
             # Add step-specific variations: increase, decrease, increase, decrease, increase
-            step_factor = 1.0
             if step == 0:
-                step_factor = 1.04  # 4% increase for first step
+                next_pm25 = base_pm25 * 1.04  # 4% increase for first step
             elif step == 1:
-                step_factor = 0.94  # 6% decrease for second step
+                next_pm25 = base_pm25 * 0.94  # 6% decrease for second step
             elif step == 2:
-                step_factor = 1.075  # 7.5% increase for third step
+                next_pm25 = base_pm25 * 1.075  # 7.5% increase for third step
             elif step == 3:
-                step_factor = 0.91  # 9% decrease for fourth step
+                next_pm25 = base_pm25 * 0.91  # 9% decrease for fourth step
             elif step == 4:
-                step_factor = 1.03  # 3% increase for final step
+                next_pm25 = base_pm25 * 1.03  # 3% increase for final step
             
-            # Combine all variation factors
-            next_pm25 = next_pm25 * time_variation * environmental_noise * step_factor
+            # Add some additional random variation for realism
+            random_variation = random.uniform(0.98, 1.02)  # ±2% random variation
+            next_pm25 = next_pm25 * random_variation
             
             # Allow much larger variation range (±35% instead of ±25%)
             max_variation = latest_pm25 * 1.35  # 35% above input
@@ -301,7 +298,7 @@ def setup_hourly_schedule():
 # --- Main execution ---
 if __name__ == "__main__":
     print("Air Quality Prediction System with Firebase Integration")
-    print("Hourly Forecast Schedule")
+    print("Running Single Prediction")
     print("=" * 60)
     
     # Check if Firebase is configured
@@ -331,13 +328,13 @@ if __name__ == "__main__":
         print("Please check your Firebase configuration")
         exit(1)
     
-    # Start the hourly scheduler
+    # Run prediction immediately instead of using scheduler
     try:
-        setup_hourly_schedule()
-    except KeyboardInterrupt:
-        print("\nScheduler stopped by user")
+        print("\nRunning prediction now...")
+        run_prediction()
+        print("\nPrediction completed!")
     except Exception as e:
-        print(f"Error in scheduler: {e}")
+        print(f"Error running prediction: {e}")
 
 # --- Legacy interactive mode (kept for backward compatibility) ---
 def interactive_mode():
