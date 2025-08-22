@@ -3,7 +3,7 @@ services:
     name: air-quality-api
     env: node
     buildCommand: npm install
-    startCommand: node prediction-api.js
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production

@@ -40,49 +40,19 @@ app.get('/api/predictions', (req, res) => {
     
     console.log('Raw CSV values:', values);
     
-    // Parse the forecast arrays - handle multi-column arrays
-    let pm25ForecastStr = '';
-    let aqiForecastStr = '';
+    // Parse the forecast arrays from CSV format
+    let pm25ForecastStr = values[2] || '';
+    let aqiForecastStr = values[3] || '';
     
-    // Reconstruct PM2.5 array from multiple columns
-    let pm25Parts = [];
-    for (let i = 2; i < values.length; i++) {
-      if (values[i].includes('np.float64')) {
-        const cleanValue = values[i].replace('np.float64(', '').replace(')', '').trim();
-        if (cleanValue) {
-          pm25Parts.push(cleanValue);
-        }
-      }
-    }
-    pm25ForecastStr = pm25Parts.join(', ');
-    
-    // Reconstruct AQI array from multiple columns
-    let aqiParts = [];
-    for (let i = 2; i < values.length; i++) {
-      if (values[i].includes('"') && values[i].includes('[')) {
-        // Start of AQI array
-        const cleanValue = values[i].replace('"[', '').trim();
-        if (cleanValue) {
-          aqiParts.push(cleanValue);
-        }
-      } else if (values[i].includes('"') && values[i].includes(']')) {
-        // End of AQI array
-        const cleanValue = values[i].replace(']"', '').trim();
-        if (cleanValue) {
-          aqiParts.push(cleanValue);
-        }
-      } else if (values[i].trim().match(/^\d+$/)) {
-        // Middle AQI values
-        aqiParts.push(values[i].trim());
-      }
-    }
-    aqiForecastStr = aqiParts.join(', ');
+    // Remove quotes and brackets
+    pm25ForecastStr = pm25ForecastStr.replace(/"/g, '').replace(/\[|\]/g, '');
+    aqiForecastStr = aqiForecastStr.replace(/"/g, '').replace(/\[|\]/g, '');
     
     console.log('PM25 forecast string:', pm25ForecastStr);
     console.log('AQI forecast string:', aqiForecastStr);
     
     const pm25Forecast = pm25ForecastStr.split(', ').map(val => 
-      parseFloat(val.replace('np.float64(', '').replace(')', ''))
+      parseFloat(val.trim())
     ).filter(val => !isNaN(val));
     
     const aqiForecast = aqiForecastStr.replace(/"/g, '').replace(/\[|\]/g, '').split(',').map(val => 
