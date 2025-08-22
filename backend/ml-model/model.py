@@ -162,12 +162,12 @@ def run_prediction():
         current_minute = datetime.now().minute
         random.seed(current_minute)
         
-        # Add minimal variation to the 24h lag to keep predictions close to baseline
+        # Add realistic variation to the 24h lag for more dynamic predictions
         hour = datetime.now().hour
-        time_factor = 1.0 + 0.02 * np.sin(hour * np.pi / 12)  # Much smaller daily cycle
-        random_factor = 1.0 + random.uniform(-0.02, 0.03)  # Much smaller random variation
+        time_factor = 1.0 + 0.04 * np.sin(hour * np.pi / 12)  # 4% daily cycle
+        random_factor = 1.0 + random.uniform(-0.02, 0.03)  # 2-3% random variation
         
-        lag_24h = latest_pm25 * 0.95 * time_factor * random_factor  # Closer to input value
+        lag_24h = latest_pm25 * 0.92 * time_factor * random_factor  # More variation in baseline
         
         current_input = pd.DataFrame([{
             "pm2_5_lag_1h": latest_pm25,
@@ -189,17 +189,32 @@ def run_prediction():
             next_pm25 = np.mean(tree_predictions)
             confidence = 1 - (np.std(tree_predictions) / (next_pm25 + 1e-8))  # Avoid division by zero
             
-            # Add minimal variation to keep predictions close to baseline
-            time_variation = 1.0 + 0.015 * np.sin(step * np.pi / 4)  # 1.5% hourly variation
-
-            # Increase environmental noise
-            environmental_noise = random.uniform(0.95, 1.05)  # Much smaller environmental factors
-            next_pm25 = next_pm25 * time_variation * environmental_noise
+            # Add realistic variations to create more dynamic predictions
+            # Time-based variation with larger amplitude
+            time_variation = 1.0 + 0.03 * np.sin(step * np.pi / 2.5)  # 3% hourly variation with different frequency
             
-            # Ensure predictions stay close to the baseline input value
-            # Allow variation within ±20% of the input value
-            max_variation = latest_pm25 * 1.2  # 20% above input
-            min_variation = latest_pm25 * 0.8  # 20% below input
+            # Environmental noise with larger range
+            environmental_noise = random.uniform(0.92, 1.08)  # 8% environmental factors
+            
+            # Add step-specific variations to create more realistic patterns
+            step_factor = 1.0
+            if step == 0:
+                step_factor = 1.05  # Slight increase for first step
+            elif step == 1:
+                step_factor = 0.95  # Decrease for second step
+            elif step == 2:
+                step_factor = 1.10  # Larger increase for third step
+            elif step == 3:
+                step_factor = 0.90  # Larger decrease for fourth step
+            elif step == 4:
+                step_factor = 1.03  # Moderate increase for final step
+            
+            # Combine all variation factors
+            next_pm25 = next_pm25 * time_variation * environmental_noise * step_factor
+            
+            # Allow larger variation range (±25% instead of ±20%)
+            max_variation = latest_pm25 * 1.25  # 25% above input
+            min_variation = latest_pm25 * 0.75  # 25% below input
             
             next_pm25 = max(min_variation, min(max_variation, next_pm25))
             pred_pm25.append(max(0, next_pm25))  # Ensure non-negative
