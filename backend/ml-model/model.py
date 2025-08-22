@@ -190,8 +190,10 @@ def run_prediction():
             confidence = 1 - (np.std(tree_predictions) / (next_pm25 + 1e-8))  # Avoid division by zero
             
             # Add minimal variation to keep predictions close to baseline
-            time_variation = 1.0 + 0.005 * np.sin(step * np.pi / 4)  # Much smaller hourly variation
-            environmental_noise = random.uniform(0.98, 1.02)  # Much smaller environmental factors
+            time_variation = 1.0 + 0.015 * np.sin(step * np.pi / 4)  # 1.5% hourly variation
+
+            # Increase environmental noise
+            environmental_noise = random.uniform(0.95, 1.05)  # Much smaller environmental factors
             next_pm25 = next_pm25 * time_variation * environmental_noise
             
             # Ensure predictions stay close to the baseline input value
