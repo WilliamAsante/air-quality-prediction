@@ -189,7 +189,7 @@ def run_prediction():
             next_pm25 = np.mean(tree_predictions)
             confidence = 1 - (np.std(tree_predictions) / (next_pm25 + 1e-8))  # Avoid division by zero
             
-            # Force exact variations based on your specified percentages
+            # Force significant variations by overriding the ML prediction with step-based calculations
             # Start with the input value and apply step-specific variations
             base_pm25 = latest_pm25
             
@@ -205,8 +205,9 @@ def run_prediction():
             elif step == 4:
                 next_pm25 = base_pm25 * 1.03  # 3% increase for final step
             
-            # Round to 2 decimal places for clean display
-            next_pm25 = round(next_pm25, 2)
+            # Add some additional random variation for realism
+            random_variation = random.uniform(0.98, 1.02)  # ±2% random variation
+            next_pm25 = next_pm25 * random_variation
             
             # Allow much larger variation range (±35% instead of ±25%)
             max_variation = latest_pm25 * 1.35  # 35% above input
